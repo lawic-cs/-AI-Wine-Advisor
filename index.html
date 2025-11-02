@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍷 AI Wine Advisor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.6s ease-out;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-700 to-pink-600">
+    <div class="max-w-7xl mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-bold text-white drop-shadow-lg mb-4">
+                🍷 AI Wine Advisor
+            </h1>
+            <p class="text-2xl text-purple-100">
+                Votre sommelier personnel alimenté par l'IA
+            </p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">
+                ✨ Trouvez les vins parfaits
+            </h2>
+
+            <form id="wineForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Dish Input -->
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">
+                        🍽️ Plat principal *
+                    </label>
+                    <input
+                        type="text"
+                        id="dish"
+                        name="dish"
+                        required
+                        placeholder="Ex: Canard rôti, Saumon grillé, Risotto aux champignons"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
+                    />
+                </div>
+
+                <!-- Mood Input -->
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">
+                        💫 Ambiance ou occasion *
+                    </label>
+                    <input
+                        type="text"
+                        id="mood"
+                        name="mood"
+                        required
+                        placeholder="Ex: Dîner romantique, Repas en famille, Célébration"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors"
+                    />
+                </div>
+
+                <!-- Budget Dropdown -->
+                <div>
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">
+                        💰 Budget
+                    </label>
+                    <select
+                        id="budget"
+                        name="budget"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors bg-white"
+                    >
+                        <option value="">Sélectionnez un budget</option>
+                        <option value="moins-10">Moins de 10€</option>
+                        <option value="10-20">10€ - 20€</option>
+                        <option value="20-30">20€ - 30€</option>
+                        <option value="30-50">30€ - 50€</option>
+                        <option value="50-100">50€ - 100€</option>
+                        <option value="plus-100">Plus de 100€</option>
+                    </select>
+                </div>
+
+                <!-- Region Dropdown -->
+                <div>
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">
+                        📍 Région préférée
+                    </label>
+                    <select
+                        id="region"
+                        name="region"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-colors bg-white"
+                    >
+                        <option value="">Toutes les régions</option>
+                        <option value="bordeaux">Bordeaux</option>
+                        <option value="bourgogne">Bourgogne</option>
+                        <option value="champagne">Champagne</option>
+                        <option value="rhone">Vallée du Rhône</option>
+                        <option value="loire">Vallée de la Loire</option>
+                        <option value="alsace">Alsace</option>
+                        <option value="provence">Provence</option>
+                        <option value="languedoc">Languedoc-Roussillon</option>
+                        <option value="beaujolais">Beaujolais</option>
+                        <option value="sud-ouest">Sud-Ouest</option>
+                    </select>
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="md:col-span-2 hidden bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700"></div>
+
+                <!-- Submit Button -->
+                <div class="md:col-span-2">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <span id="btnText">🍷 Obtenir mes 3 recommandations</span>
+                        <div id="btnSpinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Recommendations Grid -->
+        <div id="recommendations" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden"></div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-purple-100 text-sm">
+            <p>🍷 Propulsé par l'intelligence artificielle Gemini • Recommandations personnalisées • Santé ! 🥂</p>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ ATTENTION : Clé API visible (OK pour usage local uniquement)
+        const GEMINI_API_KEY = 'AIzaSyDDghYeqa8r_zMpDgZiRj4uY6h9DuIFJpk';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+
+        const form = document.getElementById('wineForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const recommendationsDiv = document.getElementById('recommendations');
+
+        const budgetMap = {
+            'moins-10': 'STRICTEMENT moins de 10€ par bouteille',
+            '10-20': 'STRICTEMENT entre 10€ et 20€ par bouteille',
+            '20-30': 'STRICTEMENT entre 20€ et 30€ par bouteille',
+            '30-50': 'STRICTEMENT entre 30€ et 50€ par bouteille',
+            '50-100': 'STRICTEMENT entre 50€ et 100€ par bouteille',
+            'plus-100': 'STRICTEMENT plus de 100€ par bouteille'
+        };
+
+        const regionMap = {
+            'bordeaux': 'Bordeaux',
+            'bourgogne': 'Bourgogne',
+            'champagne': 'Champagne',
+            'rhone': 'Vallée du Rhône',
+            'loire': 'Vallée de la Loire',
+            'alsace': 'Alsace',
+            'provence': 'Provence',
+            'languedoc': 'Languedoc-Roussillon',
+            'beaujolais': 'Beaujolais',
+            'sud-ouest': 'Sud-Ouest'
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const dish = document.getElementById('dish').value;
+            const mood = document.getElementById('mood').value;
+            const budget = document.getElementById('budget').value;
+            const region = document.getElementById('region').value;
+
+            // Hide error
+            errorMessage.classList.add('hidden');
+            
+            // Show loading
+            submitBtn.disabled = true;
+            btnText.textContent = 'Génération en cours...';
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                let budgetText = '';
+                if (budget) {
+                    budgetText = `\n🔴 CONTRAINTE BUDGET OBLIGATOIRE : ${budgetMap[budget]}`;
+                }
+
+                let regionText = '';
+                if (region) {
+                    regionText = `\n🔴 CONTRAINTE RÉGION OBLIGATOIRE : Tous les vins DOIVENT venir de ${regionMap[region]}`;
+                }
+
+                const prompt = `Tu es un sommelier expert français. Tu DOIS recommander EXACTEMENT 3 vins RÉELS qui existent sur Vivino.
+
+📋 CONTEXTE DU REPAS :
+• Plat principal : ${dish}
+• Ambiance/Occasion : ${mood}${budgetText}${regionText}
+
+⚠️ RÈGLES IMPÉRATIVES :
+1. Recommande uniquement des vins RÉELS disponibles sur Vivino.fr
+2. Les prix DOIVENT correspondre aux prix moyens RÉELS sur Vivino
+3. Si un budget est spécifié, tu DOIS respecter la fourchette de prix EXACTEMENT en te basant sur Vivino
+4. Si une région est spécifiée, les 3 vins DOIVENT tous venir de cette région
+5. Classe les vins du meilleur au moins bon (#1 = meilleur choix selon notes Vivino et accord)
+6. Pour buyLink, utilise l'URL DIRECTE de la page du vin sur Vivino (pas la recherche)
+
+💡 STRATÉGIE DE PRIX BASÉE SUR VIVINO :
+- Moins de 10€ : Vins de producteurs régionaux, IGP, vins simples
+- 10-20€ : AOC classiques, bons rapports qualité-prix
+- 20-30€ : AOC réputées, crus bourgeois, premiers prix grands domaines
+- 30-50€ : Grands crus classés, grands domaines, millésimes récents
+- 50-100€ : Grands crus classés prestigieux, vieux millésimes
+- Plus de 100€ : Premiers crus, grands crus exceptionnels
+
+📝 FORMAT DE RÉPONSE (JSON strict) :
+Retourne un tableau JSON avec EXACTEMENT 3 objets :
+
+[
+  {
+    "rank": 1,
+    "name": "Nom EXACT du vin tel qu'il apparaît sur Vivino (ex: Château Pichon Baron Pauillac)",
+    "year": "Millésime disponible sur Vivino (2016-2021)",
+    "region": "Région exacte",
+    "price": "Prix RÉEL moyen sur Vivino en € (ex: 25€)",
+    "grapes": "Assemblage des cépages",
+    "aromas": ["Arôme1", "Arôme2", "Arôme3", "Arôme4"],
+    "accord": "Accord avec ${dish} (2-3 phrases)",
+    "mood": "Sublime ${mood} (2-3 phrases)",
+    "temperature": "16-18°C",
+    "decanting": "1h",
+    "buyLink": "https://www.vivino.com/FR/fr/nom-du-domaine-nom-du-vin/w/XXXXXX",
+    "color": "from-red-600 to-red-800",
+    "vivinoRating": "4.2"
+  },
+  {...},
+  {...}
+]
+
+🔗 IMPORTANT pour buyLink :
+- Utilise l'URL DIRECTE de la page produit Vivino (format: https://www.vivino.com/FR/fr/chateau-nom/w/123456)
+- Tu dois connaître les URLs exactes des vins populaires sur Vivino
+- Exemples réels :
+  * Château Lynch-Bages : https://www.vivino.com/FR/fr/chateau-lynch-bages-pauillac/w/1617
+  * Château Pichon Baron : https://www.vivino.com/FR/fr/chateau-pichon-longueville-baron-pauillac/w/1166
+  * Domaine Faiveley Gevrey-Chambertin : https://www.vivino.com/FR/fr/domaine-faiveley-gevrey-chambertin/w/18633
+- Si tu ne connais pas l'URL exacte, utilise le format de recherche : https://www.vivino.com/search/wines?q=nom+exact
+
+⭐ Pour vivinoRating : Fournis la note moyenne réelle sur Vivino (entre 3.5 et 4.8 pour les bons vins)
+
+🎨 Pour color : utilise des gradients Tailwind variés (ex: "from-purple-600 to-purple-800", "from-red-700 to-red-900", "from-amber-600 to-red-800", "from-rose-600 to-red-700")
+
+🎯 RETOURNE UNIQUEMENT LE JSON, rien d'autre.`;
+
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur API Gemini: ${response.status}`);
+                }
+
+                const data = await response.json();
+                let textResponse = data.candidates[0].content.parts[0].text;
+
+                // Nettoyer la réponse
+                textResponse = textResponse.trim();
+                if (textResponse.startsWith('```json')) {
+                    textResponse = textResponse.substring(7);
+                }
+                if (textResponse.startsWith('```')) {
+                    textResponse = textResponse.substring(3);
+                }
+                if (textResponse.endsWith('```')) {
+                    textResponse = textResponse.substring(0, textResponse.length - 3);
+                }
+                textResponse = textResponse.trim();
+
+                const wines = JSON.parse(textResponse);
+
+                if (!Array.isArray(wines) || wines.length !== 3) {
+                    throw new Error('La réponse doit contenir exactement 3 vins');
+                }
+
+                displayRecommendations(wines);
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                errorMessage.textContent = `❌ Erreur : ${error.message}`;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = '🍷 Obtenir mes 3 recommandations';
+                btnSpinner.classList.add('hidden');
+            }
+        });
+
+        function displayRecommendations(wines) {
+            recommendationsDiv.innerHTML = '';
+            recommendationsDiv.classList.remove('hidden');
+            recommendationsDiv.classList.add('animate-fade-in');
+
+            wines.forEach(wine => {
+                const wineCard = `
+                    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all">
+                        <!-- Wine Header -->
+                        <div class="bg-gradient-to-br ${wine.color || 'from-purple-600 to-pink-600'} p-6 text-white relative">
+                            <div class="absolute top-4 right-4">
+                                <div class="bg-white/20 backdrop-blur rounded-full px-3 py-1 flex items-center gap-1">
+                                    <span class="font-bold">⭐ #${wine.rank}</span>
+                                </div>
+                            </div>
+                            <div class="text-5xl mb-3">🍷</div>
+                            <h3 class="text-2xl font-bold mb-1">${wine.name}</h3>
+                            <p class="text-sm opacity-90">${wine.year}</p>
+                        </div>
+
+                        <!-- Wine Details -->
+                        <div class="p-6 space-y-4">
+                            <!-- Region & Price -->
+                            <div class="flex justify-between items-center pb-4 border-b-2 border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-gray-700">📍 ${wine.region}</span>
+                                </div>
+                                <div class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold">
+                                    ${wine.price}
+                                </div>
+                            </div>
+
+                            <!-- Grapes -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">🍇 Cépages</h4>
+                                <p class="text-sm text-gray-600">${wine.grapes}</p>
+                            </div>
+
+                            <!-- Aromas -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">✨ Arômes</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    ${wine.aromas.map(aroma => 
+                                        `<span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">${aroma}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Accord -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">🍽️ Accord</h4>
+                                <p class="text-sm text-gray-600 leading-relaxed">${wine.accord}</p>
+                            </div>
+
+                            <!-- Mood -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">💫 Ambiance</h4>
+                                <p class="text-sm text-gray-600 leading-relaxed">${wine.mood}</p>
+                            </div>
+
+                            <!-- Service & Rating -->
+                            <div class="pt-4 border-t-2 border-gray-100 space-y-2">
+                                ${wine.vivinoRating ? `
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">⭐ Note Vivino</span>
+                                    <span class="font-semibold text-gray-800">${wine.vivinoRating}/5</span>
+                                </div>
+                                ` : ''}
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">🌡️ Température</span>
+                                    <span class="font-semibold text-gray-800">${wine.temperature}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-600">⏰ Carafage</span>
+                                    <span class="font-semibold text-gray-800">${wine.decanting}</span>
+                                </div>
+                            </div>
+
+                            
+                        </div>
+                    </div>
+                `;
+                recommendationsDiv.innerHTML += wineCard;
+            });
+
+            // Scroll to results
+            recommendationsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
